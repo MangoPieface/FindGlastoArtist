@@ -12,40 +12,64 @@ type Data = {
   spotify: string;
 };
 
-type ErrorResponse = {
+type ErrorMessage = {
     message: string;
-};
+}
 
-export default function handler(
+//const OPEN_CAGE_API_KEY = "YOUR_OPEN_CAGE_API_KEY";
+
+export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<Data | ErrorResponse>
+  res: NextApiResponse<Data | ErrorMessage>
 ) {
   try {
+    const location = req.query.location as string;
+
+    const getLocationData = async (location: string): Promise<{ lat: number; lng: number }> => {
+        const apiKey = process.env.OPENCAGE_API_KEY;
+        const url = `https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(location)}&key=${process.env.OPEN_CAGE_API_KEY}`;
+      
+        const response = await fetch(url);
+        const data = await response.json();
+      
+        if (!data.results || data.results.length === 0) {
+          throw new Error("Location not found");
+        }
+      
+        return {
+          lat: data.results[0].geometry.lat,
+          lng: data.results[0].geometry.lng,
+        };
+      };
+
+      const latLongLocation = await getLocationData(location);
+
+    console.log('latlong ' + latLongLocation.lat + '  ' + latLongLocation.lng);
+ 
     const userLocation = {
-     latitude: parseFloat(req.query.lat as string),
-     longitude: parseFloat(req.query.lng as string),
-     //latitude: parseFloat("55.8642" as string),
-     //longitude: parseFloat("4.2518" as string),
+      latitude: latLongLocation.lat,
+      longitude: latLongLocation.lng,
     };
+
+    console.log('user location ' + userLocation + ' fff '+ artists[0].latitude);
+ 
 
     // Find the closest band
     const distances = artists.map(artist => ({
-        index: artists.indexOf(artist),
-        distance: geolib.getDistance(userLocation, {
-          latitude: artist.latitude,
-          longitude: artist.longitude,
-        }),
-      }));
-      
-      distances.sort((a, b) => a.distance - b.distance);
-      const closestBand = artists[distances[0].index];
-      
-      
+      a: console.log(artist.artist + artist.latitude + ' ' + artist.longitude + ' ' + geolib),
+      index: artists.indexOf(artist),
+      distance: geolib.getDistance(
+        { latitude: userLocation.latitude, longitude: userLocation.longitude },
+        { latitude: artist.latitude, longitude: artist.longitude }
+      ),
+    }));
 
-      res.status(200).json(closestBand);
+    distances.sort((a, b) => a.distance - b.distance);
+    const closestBand = artists[distances[0].index];
 
+    res.status(200).json(closestBand);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "An error occurred while processing your request." });
+    console.error('test ' + error);
+    res.status(500).json({ message: "An error occurred while processing your request." + error});
   }
-}
+};
