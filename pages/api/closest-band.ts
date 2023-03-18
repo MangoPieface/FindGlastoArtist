@@ -12,16 +12,20 @@ type Data = {
   spotify: string;
 };
 
+type ErrorResponse = {
+    message: string;
+};
+
 export default function handler(
   req: NextApiRequest,
-  res: NextApiResponse<Data>
+  res: NextApiResponse<Data | ErrorResponse>
 ) {
   try {
     const userLocation = {
-     // latitude: parseFloat(req.query.lat as string),
-     // longitude: parseFloat(req.query.lng as string),
-     latitude: parseFloat("55.8642" as string),
-     longitude: parseFloat("4.2518" as string),
+     latitude: parseFloat(req.query.lat as string),
+     longitude: parseFloat(req.query.lng as string),
+     //latitude: parseFloat("55.8642" as string),
+     //longitude: parseFloat("4.2518" as string),
     };
 
     // Find the closest band
