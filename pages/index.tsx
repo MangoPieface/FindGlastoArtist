@@ -4,6 +4,7 @@ import { TextField, Button, Typography, Container, Box, CircularProgress } from 
 
 const Home: NextPage = () => {
   const [artist, setArtist] = useState<string | null>(null);
+  const [fact, setFact] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [locationInput, setLocationInput] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
@@ -12,11 +13,12 @@ const Home: NextPage = () => {
     if (locationInput) {
       try {
         setLoading(true);
-        const response = await fetch(`/api/closest-band?location=${encodeURIComponent(locationInput)}`);
+        const response = await fetch(`/api/closest-band-whisper?location=${encodeURIComponent(locationInput)}`);
         const data = await response.json();
 
         if (response.ok) {
-          setArtist(data.artist);
+          setArtist(data.band);
+          setFact(data.fact);
           setError(null);
         } else {
           setError(data.message);
@@ -56,8 +58,18 @@ const Home: NextPage = () => {
         </Box>
         {artist && (
           <Typography variant="h6" component="h2" gutterBottom>
-            Closest Band: {artist}
+            A close band that played Glastonbury was {artist}.
+        </Typography>
+        )}
+        {error && (
+          <Typography variant="body1" component="p" color="error">
+            {error}
           </Typography>
+        )}
+        {fact && (
+          <Typography variant="h6" component="h2" gutterBottom>
+            {fact}
+        </Typography>
         )}
         {error && (
           <Typography variant="body1" component="p" color="error">
